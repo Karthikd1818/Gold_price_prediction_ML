@@ -1,0 +1,8 @@
+python
+pandas 
+seaborn
+matplotlib
+scikit-learn
+gradio
+pickle
+yfinance
