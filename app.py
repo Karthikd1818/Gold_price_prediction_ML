@@ -3,20 +3,54 @@ import pickle
 import numpy as np
 import os
 
+# --------------------------------
+# Base directory
+# --------------------------------
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-scaler = pickle.load(open('scaler.pkl','rb'))
-model = pickle.load(open('regressor.pkl','rb'))
+
+# --------------------------------
+# Load scaler and model
+# --------------------------------
+
+with open(os.path.join(BASE_DIR, "scaler.pkl"), "rb") as f:
+    scaler = pickle.load(f)
+
+with open(os.path.join(BASE_DIR, "regressor.pkl"), "rb") as f:
+    model = pickle.load(f)
+
+
+# --------------------------------
+# Prediction function
+# --------------------------------
 
 def calculate_goldrate(usd_inr):
-    scaled_input = scaler.transform(np.array(usd_inr).reshape(1,-1))
-    return round(model.predict(scaled_input)[0][0],2)
+
+    scaled_input = scaler.transform(
+        np.array(usd_inr).reshape(1, -1)
+    )
+
+    prediction = model.predict(scaled_input)
+
+    return round(float(prediction[0][0]), 2)
+
+
+# --------------------------------
+# Gradio Interface
+# --------------------------------
 
 demo = gr.Interface(
     fn=calculate_goldrate,
-    inputs=["number"],
-    outputs=["number"],
-    title="How much is 1g gold now in INR based on USD to INR exchange rate?"
+    inputs=gr.Number(label="USD to INR Exchange Rate"),
+    outputs=gr.Number(label="Predicted Gold Price (₹/g)"),
+    title="Gold Price Prediction",
+    description="Predict the estimated price of 1g gold in INR based on the USD to INR exchange rate."
 )
 
-demo.launch(share=True)
+
+# --------------------------------
+# Launch
+# --------------------------------
+
+demo.launch()
