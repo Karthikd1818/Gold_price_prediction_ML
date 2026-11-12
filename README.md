@@ -1,177 +1,95 @@
-# 🪙 22K Gold Price Prediction using Simple Linear Regression
+# Gold Price Prediction in INR using the USD/INR Exchange Rate
 
-## 📌 Project Overview
+A small machine learning project that predicts the gold rate (in INR) from the weekly USD/INR exchange rate, using simple linear regression. The model is also available as a small Gradio web app.
 
-This project uses **Simple Linear Regression** to predict the **22K gold price per gram in India** based on the **USD to INR exchange rate**.
+> **Project type:** Learning project. It uses only one input feature, so it shows the full regression workflow but is **not** a reliable tool for real gold price forecasting. See [Limitations](#limitations).
 
-The project demonstrates a complete basic machine learning workflow, including data preprocessing, exploratory analysis, model training, evaluation, and prediction.
+---
 
-## 🎯 Objective
+## Problem
 
-The main objective is to build a simple regression model that can estimate the price of **22K gold per gram in INR** using the USD-INR exchange rate as the input feature.
+Gold prices in India move with the international gold price and the rupee exchange rate. This project checks how much of the weekly gold rate in INR can be explained by the USD/INR rate alone.
 
-## 🛠️ Technologies Used
+## Dataset
 
-* Python
-* Pandas
-* NumPy
-* Matplotlib
-* Scikit-learn
-* Jupyter Notebook
-* Gradio
+| Item | Details |
+|---|---|
+| Period | Weekly data, 1 Jan 2024 to 30 Dec 2024 |
+| Rows | 53 weekly records |
+| USD/INR | Weekly closing rate downloaded from Yahoo Finance using `yfinance` (`USDINR=X`) |
+| Gold rate | Gold rate in INR per gram, from `Gold vs USDINR.csv`. Source: **[ADD THE SOURCE OF THE GOLD RATE DATA]** |
+| USD/INR range | 82.75 to 85.79 |
 
-## 🤖 Machine Learning Algorithm
+Data preparation:
+- The gold rate was stored as text with the rupee sign and commas (for example `₹5,066.31`). I removed these symbols and converted the column to numbers.
+- No missing values were found. No categorical columns needed encoding.
+- Boxplots were used to check outliers.
 
-### Simple Linear Regression
+## Method
 
-Simple Linear Regression is used to model the relationship between:
+1. Loaded the data and cleaned the gold rate column.
+2. Explored the relationship with boxplots and a regression plot.
+3. Split the data into 90% train (47 rows) and 10% test (6 rows), `random_state=42`.
+4. Scaled the input with `StandardScaler`, fitted on the training data only.
+5. Trained a `LinearRegression` model.
+6. Evaluated on the test set with MSE, RMSE, MAE and R².
+7. Tried `RandomizedSearchCV` on the model settings.
+8. Saved the model and scaler with `pickle` and built a Gradio app.
 
-**Input Feature:**
+## Results
 
-* USD to INR Exchange Rate
+Evaluated on the 6 test rows:
 
-**Target Variable:**
+| Metric | Value |
+|---|---|
+| R² | 0.70 |
+| MAE (average error) | about ₹309 per gram |
+| MSE | 141,948 |
+| RMSE | about ₹377 per gram |
 
-* 22K Gold Price per Gram in INR
+In simple words: the USD/INR rate explains about 70% of the variation in the gold rate on this small test sample, and a typical prediction is off by roughly ₹309 per gram.
 
-The model learns the relationship between the exchange rate and gold price and uses it to generate predictions.
+**Hyperparameter search:** `RandomizedSearchCV` selected `positive=True`. The resulting coefficient and intercept were the same as the original model (coefficient 469.21, intercept 5878.57 on the scaled input), so tuning did **not** improve this model. Linear regression has almost no settings that change the result.
 
-## 🔄 Machine Learning Workflow
+## Web app (Gradio)
 
-```text
-Raw Data
-   ↓
-Data Loading
-   ↓
-Data Cleaning & Preprocessing
-   ↓
-Exploratory Data Analysis
-   ↓
-Feature Selection
-   ↓
-Train-Test Split
-   ↓
-Simple Linear Regression
-   ↓
-Model Evaluation
-   ↓
-Gold Price Prediction
-   ↓
-Gradio Application
+The last cell of the notebook launches a Gradio app. You enter a USD/INR value and it returns the predicted gold rate for 1 gram in INR.
+
+```python
+import gradio as gr
+demo = gr.Interface(fn=calculate_gold_price, inputs=["number"], outputs=["number"])
+demo.launch()
 ```
 
-## 📊 Project Steps
+The app runs locally at `http://127.0.0.1:7860`. It is not deployed online.
 
-### 1. Data Loading
-
-Loaded the dataset using Pandas and inspected its structure, data types, and statistical properties.
-
-### 2. Data Preprocessing
-
-* Checked for missing values
-* Checked for duplicate records
-* Verified data types
-* Prepared the required input and target variables
-
-### 3. Exploratory Data Analysis
-
-Analyzed the relationship between the USD-INR exchange rate and the 22K gold price using data visualization and correlation analysis.
-
-### 4. Model Training
-
-The dataset was divided into training and testing sets, followed by training a Simple Linear Regression model using Scikit-learn.
-
-### 5. Model Evaluation
-
-The model was evaluated using regression metrics such as:
-
-* **R² Score**
-* **Mean Absolute Error (MAE)**
-* **Mean Squared Error (MSE)**
-* **Root Mean Squared Error (RMSE)**
-
-> Add your actual metric values here after confirming the final model results.
-
-## 📈 Prediction
-
-The trained model takes a **USD-INR exchange rate** as input and predicts the estimated **22K gold price per gram in Indian Rupees**.
-
-Example:
-
-```text
-Input:
-USD-INR Exchange Rate
-
-Output:
-Predicted 22K Gold Price per Gram (INR)
-```
-
-## 🌐 Gradio Application
-
-A simple **Gradio interface** was created to allow users to enter the USD-INR exchange rate and receive the predicted 22K gold price per gram.
-
-### Application Flow
-
-```text
-User enters USD-INR rate
-          ↓
-      ML Model
-          ↓
-Predicted 22K Gold Price
-```
-
-## 📂 Project Structure
-
-```text
-Simple-Linear-Regression-Gold-Price-Prediction/
-│
-├── data/
-│   └── dataset.csv
-│
-├── notebook/
-│   └── gold_price_prediction.ipynb
-│
-├── app.py
-├── requirements.txt
-└── README.md
-```
-
-> Update the file and folder names above to exactly match your actual repository structure.
-
-## 🚀 How to Run the Project
-
-### 1. Clone the repository
+## How to run
 
 ```bash
-git clone https://github.com/Karthikd1818/Simple-Linear-Regression-Gold-Price-Prediction.git
+pip install yfinance pandas seaborn matplotlib scikit-learn gradio
+jupyter notebook gold_price.ipynb
 ```
 
-### 2. Navigate to the project folder
+Files:
+- `gold_price.ipynb` : full workflow
+- `Gold vs USDINR.csv` : dataset
+- `regressor.pkl`, `scaler.pkl` : created when you run the notebook
 
-```bash
-cd Simple-Linear-Regression-Gold-Price-Prediction
-```
+## Limitations
 
-### 3. Install dependencies
+- **Only one feature.** Gold prices depend mainly on the international gold price, not just the exchange rate. This model ignores that, so it is a simple demonstration.
+- **Very small data.** There are 53 rows and only 6 test rows, so the R² and error values can change a lot with a different split.
+- **Random split on time data.** The rows are ordered by week, but the split was random, not by time. A real forecast should train on earlier weeks and test on later weeks.
+- **Predictions outside the training range are unreliable.** The model was trained on USD/INR values between 82.75 and 85.79. For example, an input of 80 returns about ₹3,172, which is not a realistic gold rate.
+- **One year only (2024).**
 
-```bash
-pip install -r requirements.txt
-```
+## Possible improvements
 
-### 4. Run the application
+- Add the international gold price (USD per ounce) as a second feature.
+- Use more years of data and a time-based train/test split.
+- Compare with other models and report results with cross-validation.
+- Deploy the Gradio app online (for example on Hugging Face Spaces).
 
-```bash
-python app.py
-```
+## Author
 
-## ⚠️ Disclaimer
-
-This project is developed for **educational and machine learning practice purposes**.
-
-The predicted gold price is an **estimated model output** and should not be considered a real-time market price or financial advice.
-
-## 👨‍💻 Author
-
-**Karthik D**
-
-Aspiring Data Scientist | Python | SQL | Machine Learning
+Karthik D
